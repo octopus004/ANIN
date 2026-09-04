@@ -28,17 +28,22 @@ module vga_controller #(
     localparam V_TOTAL = V_VISIBLE + V_FP + V_SYNC + V_BP; // 525
 
     // brojaci piksela/linija
-    reg [9:0] hcnt; // 0..799
-    reg [9:0] vcnt; // 0..524
+    reg [9:0] hcnt = 10'd0; // 0..799
+    reg [9:0] vcnt = 10'd0; // 0..524
+
+	// reg clk_25;
+
 
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
+		  // clk_25 <= 1'b0;
             hcnt <= 10'd0; vcnt <= 10'd0;
         end else begin
             if (hcnt == H_TOTAL-1) begin
                 hcnt <= 10'd0;
                 vcnt <= (vcnt == V_TOTAL-1) ? 10'd0 : vcnt + 10'd1;
             end else begin
+				//  clk_25 <= ~clk_25;
                 hcnt <= hcnt + 10'd1;
             end
         end
@@ -101,13 +106,20 @@ module vga_controller #(
                 default: fifo_count <= fifo_count;      // oba ili nijedno 
             endcase
 
+				if (video_active) begin
+    pixel_color <= 8'hE0;
+end else begin
+    pixel_color <= 8'h00;
+end
             // citanje iz FIFO za prikaz trenutnog piksela
-            if (video_active && !fifo_empty) begin
-                pixel_color <= fifo_mem[rptr];
-                rptr <= rptr + 4'd1;
-            end else if (!video_active) begin
-                pixel_color <= 8'h00; // van vidljive oblasti
-            end
+           // if (video_active && !fifo_empty) begin
+				//pixel_color <= 8'hE0;
+               // pixel_color <= fifo_mem[rptr];
+                //rptr <= rptr + 4'd1;
+            //end else if (!video_active) begin
+              //   pixel_color <= 8'h00;
+					 //pixel_color <= 8'h00; // van vidljive oblasti
+         //   end
         end
     end
 
