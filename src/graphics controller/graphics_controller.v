@@ -53,8 +53,10 @@ S_EDGE_EW    = 4'd7,
 S_EDGE_DRAW  = 4'd8,
 S_EDGE_DW    = 4'd9,
 
-S_DONE       = 4'd10;
+S_DONE       = 4'd10,
 
+S_DELETE   = 4'd11,
+S_DELETE_W = 4'd12;
 localparam DIR_NONE  = 3'd0,
 DIR_UP    = 3'd1,
 DIR_DOWN  = 3'd2,
@@ -159,40 +161,40 @@ end
 /*
 * RIGHT: X = prev_x + 1
 */
-/*  else if ((reg_x == prev_x + 16'd1) &&
-(reg_y == prev_y)) begin
-direction <= DIR_RIGHT;
-state     <= S_EDGE_ERASE;
+//else if ((reg_x == prev_x + 16'd1) &&
+//(reg_y == prev_y)) begin
+//direction <= DIR_RIGHT;
+//state     <= S_EDGE_ERASE;
 
 
-end
-*/
+//end
+
 /*
 * LEFT: X = prev_x - 1
 */
-/*     else if ((reg_x + 16'd1 == prev_x) &&
-(reg_y == prev_y)) begin
-direction <= DIR_LEFT;
-state     <= S_EDGE_ERASE;
-end
+//     else if ((reg_x + 16'd1 == prev_x) &&
+//(reg_y == prev_y)) begin
+//direction <= DIR_LEFT;
+//state     <= S_EDGE_ERASE;
+//end
 
 /*
 * DOWN: Y = prev_y + 1
 */
-/*          else if ((reg_y == prev_y + 16'd1) &&
-(reg_x == prev_x)) begin
-direction <= DIR_DOWN;
-state     <= S_EDGE_ERASE;
-end
+//          else if ((reg_y == prev_y + 16'd1) &&
+//(reg_x == prev_x)) begin
+//direction <= DIR_DOWN;
+//state     <= S_EDGE_ERASE;
+//end
 
 /*
 * UP: Y = prev_y - 1
 */
-/*          else if ((reg_y + 16'd1 == prev_y) &&
-(reg_x == prev_x)) begin
-direction <= DIR_UP;
-state     <= S_EDGE_ERASE;
-end
+//          else if ((reg_y + 16'd1 == prev_y) &&
+//(reg_x == prev_x)) begin
+//direction <= DIR_UP;
+//state     <= S_EDGE_ERASE;
+//end
 
 
 else begin
@@ -223,17 +225,19 @@ end
 
 S_ERASE_W: begin
 if (gfx_grant) begin
+gfx_req <= 1'b0;
 
 if (col == SQ_SIZE-1) begin
 col <= 5'd0;
 
 if (row == SQ_SIZE-1) begin
 row <= 5'd0;
+col <= 5'd0;
 
-draw_x <= reg_x;
-draw_y <= reg_y;
+//draw_x <= reg_x;
+//draw_y <= reg_y;
 
-state <= S_DRAW;
+state <= S_DELETE;
 end
 else begin
 row <= row + 5'd1;
@@ -263,6 +267,7 @@ end
 
 S_DRAW_W: begin
 if (gfx_grant) begin
+gfx_req <= 1'b0;
 
 if (col == SQ_SIZE-1) begin
 col <= 5'd0;
@@ -333,7 +338,7 @@ gfx_addr <=
 + prev_x + edge_cnt;
 end
 
-default:
+default: 
 gfx_addr <= {ADDR_WIDTH{1'b0}};
 
 endcase
@@ -451,6 +456,42 @@ end
 
 default: begin
 state <= S_IDLE;
+end
+
+S_DELETE: begin
+gfx_addr  <= pix_addr;
+gfx_wdata <= BG_COLOR;
+gfx_req   <= 1'b1;
+
+state <= S_DELETE_W;
+end
+
+
+S_DELETE_W: begin
+if (gfx_grant) begin
+gfx_req <= 1'b0;
+
+if (col == SQ_SIZE-1) begin
+
+col <= 5'd0;
+row <= 5'd0;
+
+
+draw_x <= reg_x;
+draw_y <= reg_y;
+
+state <= S_DRAW;
+end
+else begin
+
+col <= col + 5'd1;
+state <= S_DELETE;
+end
+
+end
+else begin
+gfx_req <= 1'b1;
+end
 end
 
 endcase
