@@ -161,44 +161,40 @@ end
 /*
 * RIGHT: X = prev_x + 1
 */
-//else if ((reg_x == prev_x + 16'd1) &&
-//(reg_y == prev_y)) begin
-//direction <= DIR_RIGHT;
-//state     <= S_EDGE_ERASE;
+else if ((reg_x == prev_x + 16'd1) && (reg_y == prev_y)) begin
+direction <= DIR_RIGHT;
+state     <= S_EDGE_ERASE;
 
 
-//end
+end
 
 /*
 * LEFT: X = prev_x - 1
 */
-//     else if ((reg_x + 16'd1 == prev_x) &&
-//(reg_y == prev_y)) begin
-//direction <= DIR_LEFT;
-//state     <= S_EDGE_ERASE;
-//end
+    else if ((reg_x + 16'd1 == prev_x) &&(reg_y == prev_y)) begin
+direction <= DIR_LEFT;
+state     <= S_EDGE_ERASE;
+end
 
 /*
 * DOWN: Y = prev_y + 1
 */
-//          else if ((reg_y == prev_y + 16'd1) &&
-//(reg_x == prev_x)) begin
-//direction <= DIR_DOWN;
-//state     <= S_EDGE_ERASE;
-//end
+    else if ((reg_y == prev_y + 16'd1) && (reg_x == prev_x)) begin
+direction <= DIR_DOWN;
+state     <= S_EDGE_ERASE;
+end
 
 /*
 * UP: Y = prev_y - 1
 */
-//          else if ((reg_y + 16'd1 == prev_y) &&
-//(reg_x == prev_x)) begin
-//direction <= DIR_UP;
-//state     <= S_EDGE_ERASE;
-//end
+    else if ((reg_y + 16'd1 == prev_y) && (reg_x == prev_x)) begin
+direction <= DIR_UP;
+state     <= S_EDGE_ERASE;
+end
 
 
 else begin
-// direction <= DIR_NONE;
+direction <= DIR_NONE;
 
 draw_x <= prev_x;
 draw_y <= prev_y;
@@ -234,10 +230,10 @@ if (row == SQ_SIZE-1) begin
 row <= 5'd0;
 col <= 5'd0;
 
-//draw_x <= reg_x;
-//draw_y <= reg_y;
-
-state <= S_DELETE;
+draw_x <= reg_x;
+draw_y <= reg_y;
+state<=S_DRAW;
+//state <= S_DELETE;
 end
 else begin
 row <= row + 5'd1;
@@ -302,9 +298,7 @@ case (direction)
 * y = prev_y + edge_cnt
 */
 DIR_RIGHT: begin
-gfx_addr <=
-(prev_y + edge_cnt) * FRAME_WIDTH
-+ prev_x;
+gfx_addr <= (prev_y + edge_cnt) * FRAME_WIDTH + prev_x;
 end
 
 
@@ -313,9 +307,7 @@ end
 * x = prev_x + 31
 */
 DIR_LEFT: begin
-gfx_addr <=
-(prev_y + edge_cnt) * FRAME_WIDTH
-+ prev_x + (SQ_SIZE-1);
+gfx_addr <= (prev_y + edge_cnt) * FRAME_WIDTH + prev_x + (SQ_SIZE-1);
 end
 
 
@@ -323,9 +315,7 @@ end
 * brišemo stari gornji red
 */
 DIR_DOWN: begin
-gfx_addr <=
-prev_y * FRAME_WIDTH
-+ prev_x + edge_cnt;
+gfx_addr <= prev_y * FRAME_WIDTH + prev_x + edge_cnt;
 end
 
 
@@ -333,9 +323,7 @@ end
 * brišemo stari donji red
 */
 DIR_UP: begin
-gfx_addr <=
-(prev_y + (SQ_SIZE-1)) * FRAME_WIDTH
-+ prev_x + edge_cnt;
+gfx_addr <= (prev_y + (SQ_SIZE-1)) * FRAME_WIDTH + prev_x + edge_cnt;
 end
 
 default: 
@@ -351,11 +339,14 @@ end
 
 
 S_EDGE_EW: begin
+
 if (gfx_grant) begin
+gfx_req <= 1'b0;
+
 
 if (edge_cnt == SQ_SIZE-1) begin
 edge_cnt <= 6'd0;
-state <= S_EDGE_DRAW;
+state <= S_DELETE;
 end
 else begin
 edge_cnt <= edge_cnt + 6'd1;
@@ -376,9 +367,7 @@ case (direction)
 * nova desna kolona
 */
 DIR_RIGHT: begin
-gfx_addr <=
-(reg_y + edge_cnt) * FRAME_WIDTH
-+ reg_x + (SQ_SIZE-1);
+gfx_addr <= (reg_y + edge_cnt) * FRAME_WIDTH + reg_x + (SQ_SIZE-1);
 end
 
 
@@ -386,9 +375,7 @@ end
 * nova leva kolona
 */
 DIR_LEFT: begin
-gfx_addr <=
-(reg_y + edge_cnt) * FRAME_WIDTH
-+ reg_x;
+gfx_addr <= (reg_y + edge_cnt) * FRAME_WIDTH + reg_x;
 end
 
 
@@ -396,9 +383,7 @@ end
 * novi donji red
 */
 DIR_DOWN: begin
-gfx_addr <=
-(reg_y + (SQ_SIZE-1)) * FRAME_WIDTH
-+ reg_x + edge_cnt;
+gfx_addr <= (reg_y + (SQ_SIZE-1)) * FRAME_WIDTH + reg_x + edge_cnt;
 end
 
 
@@ -406,9 +391,7 @@ end
 * novi gornji red
 */
 DIR_UP: begin
-gfx_addr <=
-reg_y * FRAME_WIDTH
-+ reg_x + edge_cnt;
+gfx_addr <= reg_y * FRAME_WIDTH + reg_x + edge_cnt;
 end
 
 default:
@@ -425,6 +408,8 @@ end
 
 S_EDGE_DW: begin
 if (gfx_grant) begin
+gfx_req <= 1'b0;
+
 
 if (edge_cnt == SQ_SIZE-1) begin
 edge_cnt <= 6'd0;
@@ -459,19 +444,43 @@ state <= S_IDLE;
 end
 
 S_DELETE: begin
-gfx_addr  <= pix_addr;
+case (direction)
+
+DIR_RIGHT: begin
+gfx_addr <= (prev_y + edge_cnt) * FRAME_WIDTH + prev_x;
+end
+
+DIR_LEFT: begin
+gfx_addr <= (prev_y + edge_cnt) * FRAME_WIDTH + prev_x + (SQ_SIZE-1);
+end
+
+DIR_DOWN: begin
+gfx_addr <= prev_y * FRAME_WIDTH + prev_x + edge_cnt;
+end
+
+DIR_UP: begin
+gfx_addr <= (prev_y + (SQ_SIZE-1)) * FRAME_WIDTH + prev_x + edge_cnt;
+end
+
+default: begin
+gfx_addr <= {ADDR_WIDTH{1'b0}};
+end
+
+endcase
+
 gfx_wdata <= BG_COLOR;
 gfx_req   <= 1'b1;
+state     <= S_DELETE_W;
 
-state <= S_DELETE_W;
 end
 
 
 S_DELETE_W: begin
+
 if (gfx_grant) begin
 gfx_req <= 1'b0;
 
-if (col == SQ_SIZE-1) begin
+/*if (col == SQ_SIZE-1) begin
 
 col <= 5'd0;
 row <= 5'd0;
@@ -481,13 +490,23 @@ draw_x <= reg_x;
 draw_y <= reg_y;
 
 state <= S_DRAW;
-end
-else begin
+end*/
+/*else begin
 
 col <= col + 5'd1;
 state <= S_DELETE;
 end
+*/
 
+if (edge_cnt == SQ_SIZE-1) begin
+edge_cnt <= 6'd0;
+
+state <= S_EDGE_DRAW;
+end
+else begin
+edge_cnt <= edge_cnt + 6'd1;
+state <= S_DELETE;
+end
 end
 else begin
 gfx_req <= 1'b1;
