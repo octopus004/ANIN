@@ -4,3 +4,6 @@ treperenje - na wr 1024 ima, na 64 nema
 =================================================
 bele tacke- kao nema
 crne - nema
+treperenje - ima
+=================================================
+kao nema nista
